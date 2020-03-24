@@ -298,7 +298,6 @@ class HiddenMarkovModel:
         '''
         
         N = len(X)
-        X = [np.array(x) for x in X]
         
         #for n in tqdm(range(N_iters)):
         for n in range(1):
@@ -308,9 +307,9 @@ class HiddenMarkovModel:
             O_num = np.zeros([self.L, self.D])
             O_den = np.zeros([self.L, self.D])
         
-            for seq in X:
-                seq = np.array(x) # for each seq in X
-                M = seq.shape(0)
+            for j in range(N):
+                seq = np.array(X[j]) # for each seq in X
+                M = len(seq)
                 
                 # discard 0th index bc we are indexing at 1 :(
                 alphas = self.forward(seq, normalize=True)[1:] 
@@ -318,27 +317,24 @@ class HiddenMarkovModel:
                 
                 # find and store single margin of P(y = a | x)
                 margin = np.zeros([M, self.L])
-                joint = np.zeros([self.L, self.L, M])
-
                 for i in range(M):
                     margin[i, :] = alphas[i, :] * betas[i, :]
                     
                     if np.sum(margin[i, :]) != 0:
                         margin[i, :] = margin[i, :] / np.sum(margin[i, :])
-                        
-                    # find and store joint margin of P(y^i = a, y^i+1 = b | x)
-                    if i != (M - 1):
-                        for a in range(self.L):
-                            for b in range(self.L):
-                                joint[a, b, i] = alphas[i, a] * self.A[a][b] * self.O[b][seq[i+1]] * betas[i+1, b]
+                
+                joint = np.zeros([self.L, self.L, M])
+                
+                # find and store joint margin of P(y^i = a, y^i+1 = b | x)
+                for i in range(M - 1):
+                    for a in range(self.L):
+                        for b in range(self.L):
+                            joint[a, b, i] = alphas[i, a] * self.A[a][b] * self.O[b][seq[i+1]] * betas[i+1, b]
                     
-                        if np.sum(joint[:, :, i]) != 0:
-                            joint[:, :, i] = joint[:, :, i] / np.sum(joint[:, :, i])
-                
-                
+                    if np.sum(joint[:, :, i]) != 0:
+                        joint[:, :, i] = joint[:, :, i] / np.sum(joint[:, :, i])
                 
                 # find A's and O's by summing over i for a,b/a,w dimensions
-                Adsum= np.sum()
                 for a in range(self.L):
                     A_den[a, :] += np.sum(margin[:M-1, a])
                     O_den[a, :] += np.sum(margin[:, a])
