@@ -13,6 +13,32 @@ from wordcloud import WordCloud
 from matplotlib import animation
 from matplotlib.animation import FuncAnimation
 
+from collections import Counter
+from string import punctuation
+import nltk
+nltk.download('stopwords')
+
+# takes in some text and outputs a list with the top ten most common words
+def top_ten_words(text):
+    # stopwords have the top most common words
+    stopwords = set(nltk.corpus.stopwords.words('english'))
+    # add words to stopwords, based on https://bryanbumgardner.com/elizabethan-stop-words-for-nlp/
+    stopwords.update({"art", "doth", "dost", "ere", "hast", "hath", "hence",
+                      "hither", "nigh", "oft", "should'st", "thither", "tither",
+                      "thee", "thou", "thine", "thy", "tis", "twas", "wast", "whence",
+                      "wherefore", "whereto", "withal", "would'st", "ye", "yon", "yonder"})
+
+    with_stp = Counter()
+    # will find top words, excluding the stopwords
+    without_stp  = Counter()
+    lst = text.split()
+
+    with_stp.update(word.lower().rstrip(punctuation) for word in lst if word.lower() in stopwords)
+    without_stp.update(word.lower().rstrip(punctuation)  for word in lst if word  not in stopwords)
+
+    # return a list with top ten most common words from each
+    return [x for x in with_stp.most_common(10)],[y for y in without_stp.most_common(10)]
+
 
 ####################
 # WORDCLOUD FUNCTIONS
@@ -73,11 +99,64 @@ def states_to_wordclouds(hmm, obs_map, max_words=50, show=True):
     for i in range(n_states):
         obs_lst = obs_count[i]
         sentence = [obs_map_r[j] for j in obs_lst]
-        sentence_str = ' '.join(sentence)       
+        sentence_str = ' '.join(sentence)
         sentences.append(sentence_str)
         wordclouds.append(text_to_wordcloud(sentence_str, max_words=max_words, title='State %d' % i, show=show))
 
     return (wordclouds, sentences)
+
+######
+# WORD RANKING FUNCTIONS
+#####
+
+def most_freq(hmm, obs_map):
+    words, sentences = states_to_wordclouds(hmm, obs_map)
+
+    most_freq = []
+    for i in range(len(sentences)):
+        x_stp = []
+        y_stp = []
+        x_no_stp = []
+        y_no_stp = []
+        top_ten_stp, top_ten_no_stp = top_ten_words(sentences[i])
+        # print top 10 words
+        print("The top 10 words for state " + str(i) + " with stopwords are:")
+        for j in range(len(top_ten_stp)):
+            # with stp words
+            print(top_ten_stp[j][0] + ": " + str(top_ten_stp[j][1]))
+            x_stp.append(top_ten_stp[j][0])
+            y_stp.append(top_ten_stp[j][1])
+        print()
+
+        print("The top 10 words for state " + str(i) + " without stopwords are:")
+        for j in range(len(top_ten_no_stp)):
+            # without stp words
+            print(top_ten_no_stp[j][0] + ": " + str(top_ten_no_stp[j][1]))
+            x_no_stp.append(top_ten_no_stp[j][0])
+            y_no_stp.append(top_ten_no_stp[j][1])
+        print()
+
+        # plot top 10 words with stopwords
+        plt.figure(1)
+        x_pos = [i for i, _ in enumerate(x_stp)]
+        plt.bar(x_pos, y_stp)
+        plt.xlabel("Word")
+        plt.ylabel("Frequency")
+        title = "Top 10 Words (Including Stopwords) in State " + str(i) + " By Frequency"
+        plt.title(title)
+        plt.xticks(x_pos, x_stp)
+        plt.show()
+
+        # plot top 10 words without stopwords
+        plt.figure(2)
+        x_pos = [i for i, _ in enumerate(x_no_stp)]
+        plt.bar(x_pos, y_no_stp)
+        plt.xlabel("Word")
+        plt.ylabel("Frequency")
+        title = "Top 10 Words (Not Including Stopwords) in State " + str(i) + " By Frequency"
+        plt.title(title)
+        plt.xticks(x_pos, x_no_stp)
+        plt.show()
 
 ####################
 # HMM FUNCTIONS
@@ -93,17 +172,17 @@ def parse_observations(text):
 
     for line in lines:
         obs_elem = []
-        
+
         for word in line:
             word = re.sub(r'[^\w]', '', word).lower()
             if word not in obs_map:
                 # Add unique words to the observations map.
                 obs_map[word] = obs_counter
                 obs_counter += 1
-            
+
             # Add the encoded word.
             obs_elem.append(obs_map[word])
-        
+
         # Add the encoded sequence.
         obs.append(obs_elem)
 
@@ -166,13 +245,13 @@ def animate_emission(hmm, obs_map, M=8, height=12, width=12, delay=1):
     arrow_p1 = 0.03
     arrow_p2 = 0.02
     arrow_p3 = 0.06
-    
+
     # Initialize.
     n_states = len(hmm.A)
     obs_map_r = obs_map_reverser(obs_map)
     wordclouds, sentences = states_to_wordclouds(hmm, obs_map, max_words=20, show=False)
 
-    # Initialize plot.    
+    # Initialize plot.
     fig, ax = plt.subplots()
     fig.set_figheight(height)
     fig.set_figwidth(width)
@@ -189,7 +268,7 @@ def animate_emission(hmm, obs_map, M=8, height=12, width=12, delay=1):
 
     # Initialize text.
     text = ax.text(text_x_offset, lim - text_y_offset, '', fontsize=24)
-        
+
     # Make the arrows.
     zorder_mult = n_states ** 2 * 100
     arrows = []
@@ -201,7 +280,7 @@ def animate_emission(hmm, obs_map, M=8, height=12, width=12, delay=1):
             y_i = y_offset + R * np.sin(np.pi * 2 * i / n_states)
             x_j = x_offset + R * np.cos(np.pi * 2 * j / n_states)
             y_j = y_offset + R * np.sin(np.pi * 2 * j / n_states)
-            
+
             dx = x_j - x_i
             dy = y_j - y_i
             d = np.sqrt(dx**2 + dy**2)
