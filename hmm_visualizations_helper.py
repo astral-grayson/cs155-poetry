@@ -4,24 +4,28 @@ from collections import Counter
 import numpy as np
 from string import punctuation
 import matplotlib.pyplot as plt
+import nltk
+nltk.download('stopwords')
 
 # takes in some text and outputs a list with the top ten most common words
 def top_ten_words(text):
     # stopwords have the top most common words
     stopwords = set(nltk.corpus.stopwords.words('english'))
     # add words to stopwords, based on https://bryanbumgardner.com/elizabethan-stop-words-for-nlp/
-    stopwords.update({"art", "doth", "dost", "ere", "hast", "hath", "hence", 
-                      "hither", "nigh", "oft", "should'st", "thither", "tither", 
-                      "thee", "thou", "thine", "thy", "tis", "twas", "wast", "whence", 
+    stopwords.update({"art", "doth", "dost", "ere", "hast", "hath", "hence",
+                      "hither", "nigh", "oft", "should'st", "thither", "tither",
+                      "thee", "thou", "thine", "thy", "tis", "twas", "wast", "whence",
                       "wherefore", "whereto", "withal", "would'st", "ye", "yon", "yonder"})
-    
+
     with_stp = Counter()
     # will find top words, excluding the stopwords
     without_stp  = Counter()
     lst = text.split()
-    count.update(word.lower().rstrip(punctuation) for word in lst)
-    
-    # return a list with top ten most common words from each 
+
+    with_stp.update(word.lower().rstrip(punctuation) for word in lst if word.lower() in stopwords)
+    without_stp.update(word.lower().rstrip(punctuation)  for word in lst if word  not in stopwords)
+
+    # return a list with top ten most common words from each
     return [x for x in with_stp.most_common(10)],[y for y in without_stp.most_common(10)]
 '''
 # takes in a list of text (corresponding to each state) and outputs
