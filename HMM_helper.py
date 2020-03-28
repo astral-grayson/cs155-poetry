@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 from matplotlib import animation
 from matplotlib.animation import FuncAnimation
+from hmm_visualizations_helper import top_ten_words
 
 
 ####################
@@ -73,11 +74,42 @@ def states_to_wordclouds(hmm, obs_map, max_words=50, show=True):
     for i in range(n_states):
         obs_lst = obs_count[i]
         sentence = [obs_map_r[j] for j in obs_lst]
-        sentence_str = ' '.join(sentence)       
+        sentence_str = ' '.join(sentence)
         sentences.append(sentence_str)
         wordclouds.append(text_to_wordcloud(sentence_str, max_words=max_words, title='State %d' % i, show=show))
 
     return (wordclouds, sentences)
+
+######
+# WORD RANKING FUNCTIONS
+#####
+
+def most_freq(hmm, obs_map):
+    words, sentences = states_to_wordclouds(hmm, obs_map)
+
+    most_freq = []
+    for i in range(len(sentences)):
+        x = []
+        y = []
+        top_ten = top_ten_words(sentences[i])
+        # print top 10 words
+        print("The top 10 words for state " + str(i) + " are:")
+        for j in range(len(top_ten)):
+            print(top_ten[j][0] + ": " + str(top_ten[j][1]))
+            x.append(top_ten[j][0])
+            y.append(top_ten[j][1])
+        print()
+
+        # plot top 10 words
+        plt.figure(i)
+        x_pos = [i for i, _ in enumerate(x)]
+        plt.bar(x_pos, y)
+        plt.xlabel("Word")
+        plt.ylabel("Frequency")
+        title = "Top 10 Words in State " + str(i) + " By Frequency"
+        plt.title(title)
+        plt.xticks(x_pos, x)
+        plt.show()
 
 ####################
 # HMM FUNCTIONS
@@ -93,17 +125,17 @@ def parse_observations(text):
 
     for line in lines:
         obs_elem = []
-        
+
         for word in line:
             word = re.sub(r'[^\w]', '', word).lower()
             if word not in obs_map:
                 # Add unique words to the observations map.
                 obs_map[word] = obs_counter
                 obs_counter += 1
-            
+
             # Add the encoded word.
             obs_elem.append(obs_map[word])
-        
+
         # Add the encoded sequence.
         obs.append(obs_elem)
 
@@ -166,13 +198,13 @@ def animate_emission(hmm, obs_map, M=8, height=12, width=12, delay=1):
     arrow_p1 = 0.03
     arrow_p2 = 0.02
     arrow_p3 = 0.06
-    
+
     # Initialize.
     n_states = len(hmm.A)
     obs_map_r = obs_map_reverser(obs_map)
     wordclouds, sentences = states_to_wordclouds(hmm, obs_map, max_words=20, show=False)
 
-    # Initialize plot.    
+    # Initialize plot.
     fig, ax = plt.subplots()
     fig.set_figheight(height)
     fig.set_figwidth(width)
@@ -189,7 +221,7 @@ def animate_emission(hmm, obs_map, M=8, height=12, width=12, delay=1):
 
     # Initialize text.
     text = ax.text(text_x_offset, lim - text_y_offset, '', fontsize=24)
-        
+
     # Make the arrows.
     zorder_mult = n_states ** 2 * 100
     arrows = []
@@ -201,7 +233,7 @@ def animate_emission(hmm, obs_map, M=8, height=12, width=12, delay=1):
             y_i = y_offset + R * np.sin(np.pi * 2 * i / n_states)
             x_j = x_offset + R * np.cos(np.pi * 2 * j / n_states)
             y_j = y_offset + R * np.sin(np.pi * 2 * j / n_states)
-            
+
             dx = x_j - x_i
             dy = y_j - y_i
             d = np.sqrt(dx**2 + dy**2)
