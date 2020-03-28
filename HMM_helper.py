@@ -89,26 +89,48 @@ def most_freq(hmm, obs_map):
 
     most_freq = []
     for i in range(len(sentences)):
-        x = []
-        y = []
-        top_ten = top_ten_words(sentences[i])
+        x_stp = []
+        y_stp = []
+        x_no_stp = []
+        y_no_stp = []
+        top_ten_stp, top_ten_no_stp = top_ten_words(sentences[i])
         # print top 10 words
-        print("The top 10 words for state " + str(i) + " are:")
-        for j in range(len(top_ten)):
-            print(top_ten[j][0] + ": " + str(top_ten[j][1]))
-            x.append(top_ten[j][0])
-            y.append(top_ten[j][1])
+        print("The top 10 words for state " + str(i) + " with stopwords are:")
+        for j in range(len(top_ten_stp)):
+            # with stp words
+            print(top_ten_stp[j][0] + ": " + str(top_ten_stp[j][1]))
+            x_stp.append(top_ten_stp[j][0])
+            y_stp.append(top_ten_stp[j][1])    
+        print()
+       
+        print("The top 10 words for state " + str(i) + " without stopwords are:")
+        for j in range(len(top_ten_no_stp)):
+            # without stp words
+            print(top_ten_no_stp[j][0] + ": " + str(top_ten_no_stp[j][1]))
+            x_no_stp.append(top_ten_no_stp[j][0])
+            y_no_stp.append(top_ten_no_stp[j][1])     
         print()
 
-        # plot top 10 words
-        plt.figure(i)
-        x_pos = [i for i, _ in enumerate(x)]
-        plt.bar(x_pos, y)
+        # plot top 10 words with stopwords 
+        plt.figure(1)
+        x_pos = [i for i, _ in enumerate(x_stp)]
+        plt.bar(x_pos, y_stp)
         plt.xlabel("Word")
         plt.ylabel("Frequency")
-        title = "Top 10 Words in State " + str(i) + " By Frequency"
+        title = "Top 10 Words (Including Stopwords) in State " + str(i) + " By Frequency"
         plt.title(title)
-        plt.xticks(x_pos, x)
+        plt.xticks(x_pos, x_stp)
+        plt.show()
+        
+        # plot top 10 words without stopwords 
+        plt.figure(2)
+        x_pos = [i for i, _ in enumerate(x_no_stp)]
+        plt.bar(x_pos, y_no_stp)
+        plt.xlabel("Word")
+        plt.ylabel("Frequency")
+        title = "Top 10 Words (Not Including Stopwords) in State " + str(i) + " By Frequency"
+        plt.title(title)
+        plt.xticks(x_pos, x_no_stp)
         plt.show()
 
 ####################
