@@ -28,15 +28,17 @@ def sample_sonnet(hmm, obs_map):
     count = 0
 
     while count < 14:
-        # Sample and convert sentence.
+        # Sample and convert sentence to words.
         n_words = np.random.choice(np.arange(1, 10))
         emission, states = hmm.generate_emission(n_words)
         sentence = [obs_map_r[i] for i in emission]
         syl_count = 0
 
+        # count up all the syllables in sentence
         for word in sentence:
             syl_count += data.get_syllable(word)
 
+        # add to sonnet if syllable count is 10
         if syl_count == 10:
             sonnet += ' '.join(sentence).capitalize() + '\n'
             count += 1

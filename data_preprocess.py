@@ -1,15 +1,20 @@
 import string
 import re
 
+
 def get_syllable(word):
+    # gets number of syllables in given words
+
     syllable_dict = {}
 
+    # compiling given syllable dictionary into dictionary
     with open("data/Syllable_dictionary.txt") as f:
         lines = f.readlines()
         for line in lines:
             lst = line.split()
             key = lst[0].translate(str.maketrans('', '', string.punctuation))
 
+            # ignoring all ending syllable counts
             if len(lst) > 2 and ('E' in lst[len(lst) - 1]):
                 syl = int(lst[len(lst) - 2])
             else:
@@ -97,20 +102,3 @@ def get_shakes_sonnet():
     f.close()
 
     return parse_obs_list(shakes_stanzas)
-
-
-
-
-# if __name__ == '__main__':
-#     print('')
-#     print('')
-#     print('#' * 70)
-#     print("{:^70}".format("lmao lol"))
-#     print('#' * 70)
-#     print('')
-#     print('')
-#
-#     obs, obs_map = get_shakes_lines()
-#     print(obs)
-#     print('#' * 70)
-#     print(obs_map)
